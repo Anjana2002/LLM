@@ -1,47 +1,32 @@
 import streamlit as st
-from langchain.prompts import PromptTemplate
-from langchain_community.llms import CTransformers
+from transformers import T5ForConditionalGeneration, T5Tokenizer
 
-# Function to summarize content
-def summarize_content(input_text, no_words, blog_style):
-    llm = CTransformers(model='/home/anjana/Project/LLM/llama-2-7b-chat.ggmlv3.q8_0.bin', 
-                        model_type='llama',
-                        config={'max_new_tokens': 150, 'temperature': 0.01})
-    
-    # Prepare the prompt
-    template = f"""Write a summary of the content about {input_text} for {blog_style} job profile, within {no_words} words."""
-    prompt = PromptTemplate(input_variables=["blog_style", "input_text", "no_words"], template=template)
-    
-    # Generate response from LLaMA
-    response = llm(prompt.format(blog_style=blog_style, input_text=input_text, no_words=no_words))
-    return response
+# Load the T5-small model and tokenizer
+@st.cache_resource
+def load_model():
+    model_name = "t5-small"
+    model = T5ForConditionalGeneration.from_pretrained(model_name)
+    tokenizer = T5Tokenizer.from_pretrained(model_name)
+    return model, tokenizer
 
-# Streamlit UI setup
-st.set_page_config(page_title='Summarize Content', layout='centered', initial_sidebar_state='collapsed')
-st.header('Summarize Content')
+model, tokenizer = load_model()
 
-# Input fields for user to enter content
-input_text = st.text_area('Enter the content to summarize', height=150)
+# Streamlit app
+st.title("Text Summarization with T5-Small")
 
-col1, col2 = st.columns([5, 5])
-with col1:
-    no_words = st.text_input('Number of words for summary')
+# Input text
+input_text = st.text_area("Enter your text here:")
 
-with col2:
-    blog_style = st.selectbox('Writing style for summary', ('Researchers', 'Data Scientist', 'Common people'), index=0)
+# Summarize button
+if st.button("Summarize"):
+    if input_text:
+        # Tokenize and generate summary
+        inputs = tokenizer.encode("summarize: " + input_text, return_tensors="pt", max_length=512, truncation=True)
+        summary_ids = model.generate(inputs, max_length=50, min_length=25, length_penalty=2.0, num_beams=4, early_stopping=True)
+        summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
-# Button to trigger summary generation
-submit = st.button('Generate Summary')
-
-if submit:
-    # Check if inputs are valid
-    if not input_text:
-        st.warning("Please enter some content to summarize.")
-    elif not no_words.isdigit() or int(no_words) <= 0:
-        st.warning("Please enter a valid number for the number of words.")
+        # Display the summary
+        st.write("Summary:")
+        st.write(summary)
     else:
-        st.write("Generating summary...")
-        with st.spinner("Please wait..."):
-            # Generate the summary
-            result = summarize_content(input_text, no_words, blog_style)
-        st.text_area('Generated Summary:', result, height=300)
+        st.write("Please enter some text to summarize.")
