@@ -20,7 +20,7 @@ def getLLamaResponse(input_text, no_words, blog_style):
     prompt = PromptTemplate(input_variables=["blog_style","input_text","no_words"], template=template)
     
     #generate response from llama 2
-    response = llm(prompt.format(blog_style=blog_style, input_text=input_text, n_words=no_words))    
+    response = llm(prompt.format(blog_style=blog_style, input_text=input_text, no_words=no_words))    
     print(response)
     return response
 
@@ -37,7 +37,7 @@ with col1:
     no_words = st.text_input('No of words')
 
 with col2:
-    blog_style = st.selectbox('Writing the blog for', ('Reseacrhers','Data Scientist', 'Common people'), index=0)
+    blog_style = st.selectbox('Writing the blog for', ('Reseachers','Data Scientist', 'Common people'), index=0)
 
 submit = st.button('Generate')
 
