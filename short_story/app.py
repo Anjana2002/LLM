@@ -2,7 +2,7 @@ import streamlit as st
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-model_name = 'meta-llama/Llama-2-7b-hf'
+model_name = 'openlm-research/open_llama_7b'
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
 
